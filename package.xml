@@ -1,0 +1,24 @@
+<package format="2">
+    <name>victoria_base</name>
+    <version>0.1.0</version>
+    <description>The victoria_base package</description>
+
+    <maintainer email="griswald.brooks@gmail.com">Griswald Brooks</maintainer>
+
+    <license>MIT</license>
+
+    <author email="griswald.brooks@gmail.com">Griswald Brooks</author>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <depend>message_generation</depend>
+    <depend>message_runtime</depend>
+    <depend>rospy</depend>
+    <depend>sensor_msgs</depend>
+    <depend>victoria_nav_msgs</depend>
+    <depend>victoria_sensor_msgs</depend>
+    <!-- The export tag contains other, unspecified, tags -->
+    <export>
+        <!-- Other tools can request additional information be placed here -->
+
+    </export>
+</package>
