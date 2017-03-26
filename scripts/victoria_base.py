@@ -29,24 +29,35 @@
 #                        victoria_platform.
 
 import rospy
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Imu, MagneticField
 from nav_msgs.msg import Odometry
 from victoria_nav_msgs.msg import Odom2DRaw
 from victoria_sensor_msgs.msg import IMURaw
 import tf
 
-# Publish the new stuff.
+# Publishers
 imu_pub = rospy.Publisher('/imu', Imu, queue_size=10)
+mag_pub = rospy.Publisher('/mag', MagneticField, queue_size=10)
 odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
 
 def callbackImu(msg):
-        imu_msg = Imu()
-        imu_msg.header = msg.header
-        #imu_msg.orientation = quaternion thing
-        #geometry_msgs/Vector3 magnetometer 
-        imu_msg.angular_velocity = msg.gyro
-        imu_msg.linear_acceleration = msg.accelerometer
-        imu_pub.publish(imu_msg)
+    # Grab accelerometer and gyro data.
+    imu_msg = Imu()
+    imu_msg.header = msg.header
+    imu_msg.orientation_covariance[0] = -1
+    # TODO(gbrooks): Add covariances.
+    imu_msg.angular_velocity = msg.gyro
+    imu_msg.linear_acceleration = msg.accelerometer
+
+    # Grab magnetometer data.
+    mag_msg = MagneticField()
+    mag_msg.header = msg.header
+    mag_msg.magnetic_field = msg.magnetometer
+    # TODO(gbrooks): Add covariance.
+
+    # Publish sensor data.
+    imu_pub.publish(imu_msg)
+    mag_pub.publish(mag_msg)
 
 def callbackOdom(msg):
         odom_msg = Odometry()
@@ -56,19 +67,24 @@ def callbackOdom(msg):
         odom_msg.pose.pose.position.y = msg.pose.y
         odom_msg.pose.pose.position.z = 0
 
-        odom_msg.twist.twist.linear.x = 0
-        odom_msg.twist.twist.linear.y = 1
-        odom_msg.twist.twist.linear.z = 2
+        q = tf.transformations.quaternion_from_euler(0, 0, msg.pose.theta)
+        odom_msg.pose.pose.orientation.x = q[0]
+        odom_msg.pose.pose.orientation.y = q[1]
+        odom_msg.pose.pose.orientation.z = q[2]
+        odom_msg.pose.pose.orientation.w = q[3]
+        odom_msg.twist.twist.linear.x = msg.twist.vx
+        odom_msg.twist.twist.linear.y = msg.twist.vy
+        odom_msg.twist.twist.linear.z = 0
 
         odom_msg.twist.twist.angular.x = 0
-        odom_msg.twist.twist.angular.y = 1
-        odom_msg.twist.twist.angular.z = 2
+        odom_msg.twist.twist.angular.y = 0
+        odom_msg.twist.twist.angular.z = msg.twist.vtheta
 
         odom_pub.publish(odom_msg)
 
         odom_br = tf.TransformBroadcaster()
-        odom_br.sendTransform((odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, 0),
-                              tf.transformations.quaternion_from_euler(0, 0, 0),
+        odom_br.sendTransform((msg.pose.x, msg.pose.y, 0),
+                              tf.transformations.quaternion_from_euler(0, 0, msg.pose.theta),
                               rospy.Time.now(),
                               "/base_link",
                               "/odom")
