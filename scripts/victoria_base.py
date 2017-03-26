@@ -42,10 +42,10 @@ odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
 def callbackImu(msg):
         imu_msg = Imu()
         imu_msg.header = msg.header
-        imu_msg.orientation = quaternion thing
-        imu_msg.angular_velocity = msg.angular_velocity
-        imu_msg.linear_acceleration = msg.linear_acceleration
-
+        #imu_msg.orientation = quaternion thing
+        #geometry_msgs/Vector3 magnetometer 
+        imu_msg.angular_velocity = msg.gyro
+        imu_msg.linear_acceleration = msg.accelerometer
         imu_pub.publish(imu_msg)
 
 def callbackOdom(msg):
