@@ -14,6 +14,7 @@
     <depend>message_runtime</depend>
     <depend>rospy</depend>
     <depend>roslaunch</depend>
+    <depend>rosserial_python</depend>
     <depend>nav_msgs</depend>
     <depend>sensor_msgs</depend>
     <depend>victoria_nav_msgs</depend>
