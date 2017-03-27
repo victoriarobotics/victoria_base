@@ -1,7 +1,7 @@
 <launch>
     <!-- Launch rosserial to communicate with platform -->
     <!-- Parameters need to be configurable -->
-    <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node">
+    <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node" respawn="true">
         <param name="port" value="/dev/ttyACM0"/>
         <param name="baud" value="57600"/>
     </node>
