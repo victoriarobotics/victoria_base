@@ -1,6 +1,8 @@
 <launch>
     <!-- Launch rosserial to communicate with platform -->
     <!-- Parameters need to be configurable -->
+    <rosparam param="/victoria_wheel_radius">0.875</rosparam>
+    <rosparam param="/victoria_track_radius">0.255</rosparam>
     <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node" respawn="true">
         <param name="port" value="/dev/ttyACM0"/>
         <param name="baud" value="115200"/>
