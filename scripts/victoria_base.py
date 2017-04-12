@@ -47,7 +47,14 @@ def callbackImu(msg):
     imu_msg.orientation_covariance[0] = -1
     # TODO(gbrooks): Add covariances.
     imu_msg.angular_velocity = msg.gyro
+    imu_msg.angular_velocity_covariance = [0.03,    0,    0, \
+                                              0, 0.03,    0, \
+                                              0,    0, 0.03]
+
     imu_msg.linear_acceleration = msg.accelerometer
+    imu_msg.linear_acceleration_covariance = [0.30,    0,    0, \
+                                                 0, 0.30,    0, \
+                                                 0,    0, 0.30]
 
     # Grab magnetometer data.
     mag_msg = MagneticField()
@@ -65,7 +72,9 @@ def callbackOdom(msg):
         odom_msg.child_frame_id = msg.child_frame_id
         odom_msg.pose.pose.position.x = msg.pose.x
         odom_msg.pose.pose.position.y = msg.pose.y
-        odom_msg.pose.pose.position.z = 0
+        # Wheel radius.
+        # TODO(gbrooks): Parameterize.
+        odom_msg.pose.pose.position.z = 0.127
 
         q = tf.transformations.quaternion_from_euler(0, 0, msg.pose.theta)
         odom_msg.pose.pose.orientation.x = q[0]
@@ -79,23 +88,22 @@ def callbackOdom(msg):
         odom_msg.twist.twist.angular.x = 0
         odom_msg.twist.twist.angular.y = 0
         odom_msg.twist.twist.angular.z = msg.twist.vtheta
+        odom_msg.twist.covariance = [0.03,    0,    0,    0,    0,    0, \
+                                        0, 0.03,    0,    0,    0,    0, \
+                                        0,    0, 0.03,    0,    0,    0, \
+                                        0,    0,    0, 0.03,    0,    0, \
+                                        0,    0,    0,    0, 0.03,    0, \
+                                        0,    0,    0,    0,    0, 0.03]
+
 
         odom_pub.publish(odom_msg)
-
-        odom_br = tf.TransformBroadcaster()
-        odom_br.sendTransform((msg.pose.x, msg.pose.y, 0),
-                              tf.transformations.quaternion_from_euler(0, 0, msg.pose.theta),
-                              rospy.Time.now(),
-                              "/base_link",
-                              "/odom")
-
 
 def main():
     rospy.init_node('victoria_base', anonymous=True)
 
     # Subscribe to the Teensy topics.
-    rospy.Subscriber('/odom_2d_raw', Odom2DRaw, callbackOdom)
     rospy.Subscriber('/imu_raw', IMURaw, callbackImu)
+    rospy.Subscriber('/odom_2d_raw', Odom2DRaw, callbackOdom)
 
     rospy.spin()
 
