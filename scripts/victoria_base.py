@@ -36,25 +36,28 @@ from victoria_sensor_msgs.msg import IMURaw
 import tf
 
 # Publishers
-imu_pub = rospy.Publisher('/imu', Imu, queue_size=10)
-mag_pub = rospy.Publisher('/mag', MagneticField, queue_size=10)
+imu_pub = rospy.Publisher('/imu/data_raw', Imu, queue_size=10)
+mag_pub = rospy.Publisher('/imu/mag', MagneticField, queue_size=10)
 odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
 
 def callbackImu(msg):
     # Grab accelerometer and gyro data.
     imu_msg = Imu()
     imu_msg.header = msg.header
-    imu_msg.orientation_covariance[0] = -1
-    # TODO(gbrooks): Add covariances.
+    imu_msg.header.frame_id = 'imu_link'
+    imu_msg.orientation_covariance = [0.9,    0,    0, \
+                                        0, 0.9,    0, \
+                                        0,    0, 0.9]
+
     imu_msg.angular_velocity = msg.gyro
-    imu_msg.angular_velocity_covariance = [0.03,    0,    0, \
-                                              0, 0.03,    0, \
-                                              0,    0, 0.03]
+    imu_msg.angular_velocity_covariance = [0.3,    0,    0, \
+                                              0, 0.3,    0, \
+                                              0,    0, 0.3]
 
     imu_msg.linear_acceleration = msg.accelerometer
-    imu_msg.linear_acceleration_covariance = [0.30,    0,    0, \
-                                                 0, 0.30,    0, \
-                                                 0,    0, 0.30]
+    imu_msg.linear_acceleration_covariance = [0.90,    0,    0, \
+                                                 0, 0.90,    0, \
+                                                 0,    0, 0.90]
 
     # Grab magnetometer data.
     mag_msg = MagneticField()
@@ -69,7 +72,9 @@ def callbackImu(msg):
 def callbackOdom(msg):
         odom_msg = Odometry()
         odom_msg.header = msg.header
+        odom_msg.header.frame_id = 'odom'
         odom_msg.child_frame_id = msg.child_frame_id
+        odom_msg.child_frame_id = 'base_link'
         odom_msg.pose.pose.position.x = msg.pose.x
         odom_msg.pose.pose.position.y = msg.pose.y
         # Wheel radius.
@@ -81,6 +86,13 @@ def callbackOdom(msg):
         odom_msg.pose.pose.orientation.y = q[1]
         odom_msg.pose.pose.orientation.z = q[2]
         odom_msg.pose.pose.orientation.w = q[3]
+        odom_msg.pose.covariance = [0.0003,    0,    0,    0,    0,    0, \
+                                         0, 0.0003,    0,    0,    0,    0, \
+                                         0,    0, 0.0003,    0,    0,    0, \
+                                         0,    0,    0, 0.0003,    0,    0, \
+                                         0,    0,    0,    0, 0.0003,    0, \
+                                         0,    0,    0,    0,    0, 0.0003]
+
         odom_msg.twist.twist.linear.x = msg.twist.vx
         odom_msg.twist.twist.linear.y = msg.twist.vy
         odom_msg.twist.twist.linear.z = 0
@@ -88,12 +100,12 @@ def callbackOdom(msg):
         odom_msg.twist.twist.angular.x = 0
         odom_msg.twist.twist.angular.y = 0
         odom_msg.twist.twist.angular.z = msg.twist.vtheta
-        odom_msg.twist.covariance = [0.03,    0,    0,    0,    0,    0, \
-                                        0, 0.03,    0,    0,    0,    0, \
-                                        0,    0, 0.03,    0,    0,    0, \
-                                        0,    0,    0, 0.03,    0,    0, \
-                                        0,    0,    0,    0, 0.03,    0, \
-                                        0,    0,    0,    0,    0, 0.03]
+        odom_msg.twist.covariance = [0.0003,    0,    0,    0,    0,    0, \
+                                        0, 0.0003,    0,    0,    0,    0, \
+                                        0,    0, 0.0003,    0,    0,    0, \
+                                        0,    0,    0, 0.0003,    0,    0, \
+                                        0,    0,    0,    0, 0.0003,    0, \
+                                        0,    0,    0,    0,    0, 0.0003]
 
 
         odom_pub.publish(odom_msg)
