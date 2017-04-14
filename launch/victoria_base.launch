@@ -3,6 +3,16 @@
     <!-- Parameters need to be configurable -->
     <rosparam param="/victoria_wheel_radius">0.875</rosparam>
     <rosparam param="/victoria_track_radius">0.255</rosparam>
+    <rosparam param="/read_encoders_freq_hz">300</rosparam>
+    <rosparam param="/motor_controller_freq_hz">50</rosparam>
+    <rosparam param="/publish_raw_odom_freq_hz">100</rosparam>
+    <rosparam param="/publish_raw_imu_freq_hz">2</rosparam>
+    <rosparam param="/publish_bumper_info_freq_hz">10</rosparam>
+    <rosparam param="/publish_teensy_debug_info_freq_hz">1</rosparam>
+    <rosparam param="/cmd_vel_timeout_threshold">0.5</rosparam>
+    <rosparam param="/motor_controller_cmd_timeout">0.75</rosparam>
+    <rosparam param="/victoria_ticks_per_radian">9072</rosparam>
+    <rosparam param="/victoria_max_speed">4.71</rosparam>
     <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node" respawn="true">
         <param name="port" value="/dev/ttyACM0"/>
         <param name="baud" value="115200"/>
