@@ -50,9 +50,9 @@ def callbackImu(msg):
                                         0,    0, 0.09]
 
     imu_msg.angular_velocity = msg.gyro
-    imu_msg.angular_velocity_covariance = [0.003,    0,    0, \
-                                              0, 0.003,    0, \
-                                              0,    0, 0.003]
+    imu_msg.angular_velocity_covariance = [0.9,    0,    0, \
+                                              0, 0.9,    0, \
+                                              0,    0, 0.9]
 
     imu_msg.linear_acceleration = msg.accelerometer
     imu_msg.linear_acceleration_covariance = [0.90,    0,    0, \
@@ -89,9 +89,9 @@ def callbackOdom(msg):
         odom_msg.pose.covariance = [0.3,    0,    0,    0,    0,    0, \
                                          0, 0.3,    0,    0,    0,    0, \
                                          0,    0, 0.3,    0,    0,    0, \
-                                         0,    0,    0, 0.3,    0,    0, \
-                                         0,    0,    0,    0, 0.3,    0, \
-                                         0,    0,    0,    0,    0, 0.3]
+                                         0,    0,    0, 0.03,    0,    0, \
+                                         0,    0,    0,    0, 0.03,    0, \
+                                         0,    0,    0,    0,    0, 0.03]
 
         odom_msg.twist.twist.linear.x = msg.twist.vx
         odom_msg.twist.twist.linear.y = msg.twist.vy
@@ -103,9 +103,9 @@ def callbackOdom(msg):
         odom_msg.twist.covariance = [0.3,    0,    0,    0,    0,    0, \
                                         0, 0.3,    0,    0,    0,    0, \
                                         0,    0, 0.3,    0,    0,    0, \
-                                        0,    0,    0, 0.3,    0,    0, \
-                                        0,    0,    0,    0, 0.3,    0, \
-                                        0,    0,    0,    0,    0, 0.3]
+                                        0,    0,    0, 0.03,    0,    0, \
+                                        0,    0,    0,    0, 0.03,    0, \
+                                        0,    0,    0,    0,    0, 0.03]
 
 
         odom_pub.publish(odom_msg)
