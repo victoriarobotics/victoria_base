@@ -39,6 +39,8 @@ import tf
 imu_pub = rospy.Publisher('/imu/data_raw', Imu, queue_size=10)
 mag_pub = rospy.Publisher('/imu/mag', MagneticField, queue_size=10)
 odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
+first_odom = Odom2DRaw()
+have_first = False
 
 def callbackImu(msg):
     # Grab accelerometer and gyro data.
@@ -70,18 +72,24 @@ def callbackImu(msg):
     mag_pub.publish(mag_msg)
 
 def callbackOdom(msg):
+        global have_first
+        global first_odom
+        if not have_first:
+            first_odom = msg
+            have_first = True
+  
         odom_msg = Odometry()
         odom_msg.header = msg.header
         odom_msg.header.frame_id = 'odom'
         odom_msg.child_frame_id = msg.child_frame_id
         odom_msg.child_frame_id = 'base_link'
-        odom_msg.pose.pose.position.x = msg.pose.x
-        odom_msg.pose.pose.position.y = msg.pose.y
+        odom_msg.pose.pose.position.x = -msg.pose.x + first_odom.pose.x
+        odom_msg.pose.pose.position.y = -msg.pose.y + first_odom.pose.y
         # Wheel radius.
         # TODO(gbrooks): Parameterize.
         odom_msg.pose.pose.position.z = 0.127
 
-        q = tf.transformations.quaternion_from_euler(0, 0, msg.pose.theta)
+        q = tf.transformations.quaternion_from_euler(0, 0, msg.pose.theta - first_odom.pose.theta)
         odom_msg.pose.pose.orientation.x = q[0]
         odom_msg.pose.pose.orientation.y = q[1]
         odom_msg.pose.pose.orientation.z = q[2]
