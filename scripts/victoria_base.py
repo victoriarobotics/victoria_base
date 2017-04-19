@@ -99,9 +99,9 @@ def callbackOdom(msg):
         odom_msg.pose.covariance = [4, 0, 0,    0,    0,    0, \
                                     0, 4, 0,    0,    0,    0, \
                                     0, 0, 4,    0,    0,    0, \
-                                    0, 0, 0, 0.03,    0,    0, \
-                                    0, 0, 0,    0, 0.03,    0, \
-                                    0, 0, 0,    0,    0, 0.03]
+                                    0, 0, 0, 0.1,    0,    0, \
+                                    0, 0, 0,    0, 0.1,    0, \
+                                    0, 0, 0,    0,    0, 0.1]
 
         odom_msg.twist.twist.linear.x = msg.twist.vx
         odom_msg.twist.twist.linear.y = msg.twist.vy
