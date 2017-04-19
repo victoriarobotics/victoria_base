@@ -78,6 +78,7 @@ def callbackOdom(msg):
         if not have_first:
             first_odom = msg
             have_first = True
+            print "first_odom: " + str(first_odom.pose.x)
 
         odom_msg = Odometry()
         odom_msg.header = msg.header
@@ -120,8 +121,8 @@ def callbackOdom(msg):
         odom_pub.publish(odom_msg)
 
         odom_br = tf.TransformBroadcaster()
-        odom_br.sendTransform((msg.pose.x, msg.pose.y, 0),
-                              tf.transformations.quaternion_from_euler(0, 0, msg.pose.theta),
+        odom_br.sendTransform((odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, 0),
+                              tf.transformations.quaternion_from_euler(0, 0, msg.pose.theta - first_odom.pose.theta),
                               rospy.Time.now(),
                               "base_link_odom_wheel",
                               "odom")
