@@ -29,7 +29,7 @@
 #                        victoria_platform.
 
 import rospy
-from sensor_msgs.msg import Imu, MagneticField, NavSatFix
+from sensor_msgs.msg import Imu, MagneticField
 from nav_msgs.msg import Odometry
 from victoria_nav_msgs.msg import Odom2DRaw
 from victoria_sensor_msgs.msg import IMURaw
@@ -40,8 +40,6 @@ import math
 imu_pub = rospy.Publisher('/imu/data_raw', Imu, queue_size=10)
 mag_pub = rospy.Publisher('/imu/mag', MagneticField, queue_size=10)
 odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
-odom_gps_pub = rospy.Publisher('/odometry/gps_fake1', Odometry, queue_size=10)
-gps_pub = rospy.Publisher('/fix', NavSatFix, queue_size=10)
 first_odom = Odom2DRaw()
 have_first = False
 
@@ -51,13 +49,13 @@ def callbackImu(msg):
     imu_msg.header = msg.header
     imu_msg.header.frame_id = 'imu_link'
     imu_msg.orientation_covariance = [0.09,    0,    0, \
-                                        0, 0.09,    0, \
-                                        0,    0, 0.09]
+                                         0, 0.09,    0, \
+                                         0,    0, 0.09]
 
     imu_msg.angular_velocity = msg.gyro
-    imu_msg.angular_velocity_covariance = [0.9,    0,    0, \
-                                              0, 0.9,    0, \
-                                              0,    0, 0.9]
+    imu_msg.angular_velocity_covariance = [0.9,   0,   0, \
+                                             0, 0.9,   0, \
+                                             0,   0, 0.9]
 
     imu_msg.linear_acceleration = msg.accelerometer
     imu_msg.linear_acceleration_covariance = [0.90,    0,    0, \
@@ -80,7 +78,7 @@ def callbackOdom(msg):
         if not have_first:
             first_odom = msg
             have_first = True
-  
+
         odom_msg = Odometry()
         odom_msg.header = msg.header
         odom_msg.header.frame_id = 'odom'
@@ -97,12 +95,12 @@ def callbackOdom(msg):
         odom_msg.pose.pose.orientation.y = q[1]
         odom_msg.pose.pose.orientation.z = q[2]
         odom_msg.pose.pose.orientation.w = q[3]
-        odom_msg.pose.covariance = [4,    0,    0,    0,    0,    0, \
-                                         0, 4,    0,    0,    0,    0, \
-                                         0,    0, 4,    0,    0,    0, \
-                                         0,    0,    0, 0.03,    0,    0, \
-                                         0,    0,    0,    0, 0.03,    0, \
-                                         0,    0,    0,    0,    0, 0.03]
+        odom_msg.pose.covariance = [4, 0, 0,    0,    0,    0, \
+                                    0, 4, 0,    0,    0,    0, \
+                                    0, 0, 4,    0,    0,    0, \
+                                    0, 0, 0, 0.03,    0,    0, \
+                                    0, 0, 0,    0, 0.03,    0, \
+                                    0, 0, 0,    0,    0, 0.03]
 
         odom_msg.twist.twist.linear.x = msg.twist.vx
         odom_msg.twist.twist.linear.y = msg.twist.vy
@@ -111,34 +109,15 @@ def callbackOdom(msg):
         odom_msg.twist.twist.angular.x = 0
         odom_msg.twist.twist.angular.y = 0
         odom_msg.twist.twist.angular.z = msg.twist.vtheta
-        odom_msg.twist.covariance = [1,    0,    0,    0,    0,    0, \
-                                        0, 1,    0,    0,    0,    0, \
-                                        0,    0, 1,    0,    0,    0, \
-                                        0,    0,    0, 0.03,    0,    0, \
-                                        0,    0,    0,    0, 0.03,    0, \
-                                        0,    0,    0,    0,    0, 0.03]
+        odom_msg.twist.covariance = [1, 0, 0,    0,    0,    0, \
+                                     0, 1, 0,    0,    0,    0, \
+                                     0, 0, 1,    0,    0,    0, \
+                                     0, 0, 0, 0.03,    0,    0, \
+                                     0, 0, 0,    0, 0.03,    0, \
+                                     0, 0, 0,    0,    0, 0.03]
 
 
         odom_pub.publish(odom_msg)
-
-        odom_msg.pose.pose.position.x = 10
-        odom_msg.pose.pose.position.y = 0
-        odom_msg.header.frame_id = 'map'
-        odom_gps_pub.publish(odom_msg)
-
-        gps_msg = NavSatFix()
-        gps_msg.header = odom_msg.header
-        gps_msg.header.frame_id = 'gps'
-        gps_msg.status.status = 0
-        gps_msg.status.service = 2
-        gps_msg.latitude = 1.0 + 0.0001 * math.sin(rospy.Time.now().secs)
-        gps_msg.longitude = 0
-        gps_msg.altitude = 0
-        gps_msg.position_covariance = [0.9,    0,    0, \
-                                         0, 0.9,    0, \
-                                         0,    0, 0.9]
-        gps_msg.position_covariance_type = 1
-#        gps_pub.publish(gps_msg)
 
         odom_br = tf.TransformBroadcaster()
         odom_br.sendTransform((msg.pose.x, msg.pose.y, 0),
