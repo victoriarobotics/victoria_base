@@ -42,6 +42,9 @@ mag_pub = rospy.Publisher('/imu/mag', MagneticField, queue_size=10)
 odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
 first_odom = Odom2DRaw()
 have_first = False
+gyro_readings = list()
+MAX_GYRO_READINGS = 20
+gyro_bias = float('nan')
 
 def callbackImu(msg):
     # Grab accelerometer and gyro data.
@@ -56,6 +59,19 @@ def callbackImu(msg):
     imu_msg.angular_velocity_covariance = [0.9,   0,   0, \
                                              0, 0.9,   0, \
                                              0,   0, 0.9]
+
+    # Estimate gyro bias.
+    global gyro_readings
+    global MAX_GYRO_READINGS
+    global gyro_bias
+    if len(gyro_readings) < MAX_GYRO_READINGS:
+        gyro_readings.append(imu_msg.angular_velocity.z)
+        print(len(gyro_readings))
+    elif math.isnan(gyro_bias):
+        gyro_bias = sum(gyro_readings)/MAX_GYRO_READINGS
+
+    if not math.isnan(gyro_bias):
+        imu_msg.angular_velocity.z -= gyro_bias
 
     imu_msg.linear_acceleration = msg.accelerometer
     imu_msg.linear_acceleration_covariance = [0.90,    0,    0, \
@@ -96,12 +112,12 @@ def callbackOdom(msg):
         odom_msg.pose.pose.orientation.y = q[1]
         odom_msg.pose.pose.orientation.z = q[2]
         odom_msg.pose.pose.orientation.w = q[3]
-        odom_msg.pose.covariance = [4, 0, 0,    0,    0,    0, \
-                                    0, 4, 0,    0,    0,    0, \
-                                    0, 0, 4,    0,    0,    0, \
-                                    0, 0, 0, 0.1,    0,    0, \
-                                    0, 0, 0,    0, 0.1,    0, \
-                                    0, 0, 0,    0,    0, 0.1]
+        odom_msg.pose.covariance = [4, 0, 0,   0,   0,   0, \
+                                    0, 4, 0,   0,   0,   0, \
+                                    0, 0, 4,   0,   0,   0, \
+                                    0, 0, 0, 0.1,   0,   0, \
+                                    0, 0, 0,   0, 0.1,   0, \
+                                    0, 0, 0,   0,   0, 0.1]
 
         odom_msg.twist.twist.linear.x = msg.twist.vx
         odom_msg.twist.twist.linear.y = msg.twist.vy
@@ -110,12 +126,12 @@ def callbackOdom(msg):
         odom_msg.twist.twist.angular.x = 0
         odom_msg.twist.twist.angular.y = 0
         odom_msg.twist.twist.angular.z = msg.twist.vtheta
-        odom_msg.twist.covariance = [1, 0, 0,    0,    0,    0, \
-                                     0, 1, 0,    0,    0,    0, \
-                                     0, 0, 1,    0,    0,    0, \
-                                     0, 0, 0, 0.03,    0,    0, \
-                                     0, 0, 0,    0, 0.03,    0, \
-                                     0, 0, 0,    0,    0, 0.03]
+        odom_msg.twist.covariance = [0.1,   0,   0,    0,    0,    0, \
+                                       0, 0.1,   0,    0,    0,    0, \
+                                       0,   0, 0.1,    0,    0,    0, \
+                                       0,   0,   0, 0.03,    0,    0, \
+                                       0,   0,   0,    0, 0.03,    0, \
+                                       0,   0,   0,    0,    0, 0.03]
 
 
         odom_pub.publish(odom_msg)
