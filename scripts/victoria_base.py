@@ -85,8 +85,8 @@ def callbackOdom(msg):
         odom_msg.header.frame_id = 'odom'
         odom_msg.child_frame_id = msg.child_frame_id
         odom_msg.child_frame_id = 'base_link'
-        odom_msg.pose.pose.position.x = -msg.pose.x + first_odom.pose.x
-        odom_msg.pose.pose.position.y = -msg.pose.y + first_odom.pose.y
+        odom_msg.pose.pose.position.x = msg.pose.x - first_odom.pose.x
+        odom_msg.pose.pose.position.y = msg.pose.y - first_odom.pose.y
         # Wheel radius.
         # TODO(gbrooks): Parameterize.
         odom_msg.pose.pose.position.z = 0.127
