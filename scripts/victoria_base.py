@@ -68,7 +68,7 @@ def callbackImu(msg):
     q = np.array([msg.quaternion.x, msg.quaternion.y, msg.quaternion.z, msg.quaternion.w])
     q = normalize(q)
     euler = tf.transformations.euler_from_quaternion(q)
-    q = tf.transformations.quaternion_from_euler(euler[0], euler[1], euler[2] - math.pi)
+    q = tf.transformations.quaternion_from_euler(-(euler[0] + math.pi / 2), euler[1], euler[2] - math.pi)
     imu_msg.orientation.x = q[0]
     imu_msg.orientation.y = q[1]
     imu_msg.orientation.z = q[2]
@@ -77,9 +77,9 @@ def callbackImu(msg):
     rospy.loginfo("euler[0] = %s, euler[1] = %s, euler = [2] = %s",
             str(euler_new[0]), str(euler_new[1]), str(euler_new[2]))
 
-    imu_msg.orientation_covariance = [0.09,    0,    0, \
-                                         0, 0.09,    0, \
-                                         0,    0, 0.09]
+    imu_msg.orientation_covariance = [0.9,    0,    0, \
+                                         0, 0.9,    0, \
+                                         0,    0, 0.9]
 
     imu_msg.angular_velocity = msg.gyro
     imu_msg.angular_velocity_covariance = [0.9,   0,   0, \
@@ -136,12 +136,12 @@ def callbackOdom(msg):
         odom_msg.pose.pose.orientation.y = q[1]
         odom_msg.pose.pose.orientation.z = q[2]
         odom_msg.pose.pose.orientation.w = q[3]
-        odom_msg.pose.covariance = [4, 0, 0,   0,   0,   0, \
-                                    0, 4, 0,   0,   0,   0, \
-                                    0, 0, 4,   0,   0,   0, \
-                                    0, 0, 0, 0.1,   0,   0, \
-                                    0, 0, 0,   0, 0.1,   0, \
-                                    0, 0, 0,   0,   0, 0.1]
+        odom_msg.pose.covariance = [8, 0, 0,   0,   0,   0, \
+                                    0, 8, 0,   0,   0,   0, \
+                                    0, 0, 8,   0,   0,   0, \
+                                    0, 0, 0, 1,   0,   0, \
+                                    0, 0, 0,   0, 1,   0, \
+                                    0, 0, 0,   0,   0, 1]
 
         odom_msg.twist.twist.linear.x = msg.twist.vx
         odom_msg.twist.twist.linear.y = msg.twist.vy
@@ -150,12 +150,12 @@ def callbackOdom(msg):
         odom_msg.twist.twist.angular.x = 0
         odom_msg.twist.twist.angular.y = 0
         odom_msg.twist.twist.angular.z = msg.twist.vtheta
-        odom_msg.twist.covariance = [0.1,   0,   0,    0,    0,    0, \
-                                       0, 0.1,   0,    0,    0,    0, \
-                                       0,   0, 0.1,    0,    0,    0, \
-                                       0,   0,   0, 0.03,    0,    0, \
-                                       0,   0,   0,    0, 0.03,    0, \
-                                       0,   0,   0,    0,    0, 0.03]
+        odom_msg.twist.covariance = [0.5,   0,   0,    0,    0,    0, \
+                                       0, 0.5,   0,    0,    0,    0, \
+                                       0,   0, 0.5,    0,    0,    0, \
+                                       0,   0,   0, 1,    0,    0, \
+                                       0,   0,   0,    0, 1,    0, \
+                                       0,   0,   0,    0,    0, 1]
 
 
         odom_pub.publish(odom_msg)
