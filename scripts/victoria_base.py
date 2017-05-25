@@ -32,12 +32,13 @@ import rospy
 from sensor_msgs.msg import Imu, MagneticField
 from nav_msgs.msg import Odometry
 from victoria_nav_msgs.msg import Odom2DRaw
-from victoria_sensor_msgs.msg import IMURaw
+from victoria_sensor_msgs.msg import IMURaw, BNO055CalibStatus
 import tf
 import math
+import numpy as np
 
 # Publishers
-imu_pub = rospy.Publisher('/imu/data_raw', Imu, queue_size=10)
+imu_pub = rospy.Publisher('/imu/data', Imu, queue_size=10)
 mag_pub = rospy.Publisher('/imu/mag', MagneticField, queue_size=10)
 odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
 first_odom = Odom2DRaw()
@@ -45,15 +46,40 @@ have_first = False
 gyro_readings = list()
 MAX_GYRO_READINGS = 20
 gyro_bias = float('nan')
+imu_calibrated = False
+
+def normalize(v):
+    norm = np.linalg.norm(v)
+    if norm==0:
+        return v
+    return v/norm
+
+def callbackImuCalib(msg):
+    global imu_calibrated
+    if msg.sys > 0:
+        imu_calibrated = True
 
 def callbackImu(msg):
     # Grab accelerometer and gyro data.
     imu_msg = Imu()
     imu_msg.header = msg.header
     imu_msg.header.frame_id = 'imu_link'
-    imu_msg.orientation_covariance = [0.09,    0,    0, \
-                                         0, 0.09,    0, \
-                                         0,    0, 0.09]
+
+    q = np.array([msg.quaternion.x, msg.quaternion.y, msg.quaternion.z, msg.quaternion.w])
+    q = normalize(q)
+    euler = tf.transformations.euler_from_quaternion(q)
+    q = tf.transformations.quaternion_from_euler(-(euler[0] + math.pi / 2), euler[1], euler[2] - math.pi)
+    imu_msg.orientation.x = q[0]
+    imu_msg.orientation.y = q[1]
+    imu_msg.orientation.z = q[2]
+    imu_msg.orientation.w = q[3]
+    euler_new = tf.transformations.euler_from_quaternion(q)
+    rospy.loginfo("euler[0] = %s, euler[1] = %s, euler = [2] = %s",
+            str(euler_new[0]), str(euler_new[1]), str(euler_new[2]))
+
+    imu_msg.orientation_covariance = [0.9,    0,    0, \
+                                         0, 0.9,    0, \
+                                         0,    0, 0.9]
 
     imu_msg.angular_velocity = msg.gyro
     imu_msg.angular_velocity_covariance = [0.9,   0,   0, \
@@ -66,7 +92,6 @@ def callbackImu(msg):
     global gyro_bias
     if len(gyro_readings) < MAX_GYRO_READINGS:
         gyro_readings.append(imu_msg.angular_velocity.z)
-        print(len(gyro_readings))
     elif math.isnan(gyro_bias):
         gyro_bias = sum(gyro_readings)/MAX_GYRO_READINGS
 
@@ -94,7 +119,6 @@ def callbackOdom(msg):
         if not have_first:
             first_odom = msg
             have_first = True
-            print "first_odom: " + str(first_odom.pose.x)
 
         odom_msg = Odometry()
         odom_msg.header = msg.header
@@ -112,12 +136,12 @@ def callbackOdom(msg):
         odom_msg.pose.pose.orientation.y = q[1]
         odom_msg.pose.pose.orientation.z = q[2]
         odom_msg.pose.pose.orientation.w = q[3]
-        odom_msg.pose.covariance = [4, 0, 0,   0,   0,   0, \
-                                    0, 4, 0,   0,   0,   0, \
-                                    0, 0, 4,   0,   0,   0, \
-                                    0, 0, 0, 0.1,   0,   0, \
-                                    0, 0, 0,   0, 0.1,   0, \
-                                    0, 0, 0,   0,   0, 0.1]
+        odom_msg.pose.covariance = [8, 0, 0,   0,   0,   0, \
+                                    0, 8, 0,   0,   0,   0, \
+                                    0, 0, 8,   0,   0,   0, \
+                                    0, 0, 0, 1,   0,   0, \
+                                    0, 0, 0,   0, 1,   0, \
+                                    0, 0, 0,   0,   0, 1]
 
         odom_msg.twist.twist.linear.x = msg.twist.vx
         odom_msg.twist.twist.linear.y = msg.twist.vy
@@ -126,12 +150,12 @@ def callbackOdom(msg):
         odom_msg.twist.twist.angular.x = 0
         odom_msg.twist.twist.angular.y = 0
         odom_msg.twist.twist.angular.z = msg.twist.vtheta
-        odom_msg.twist.covariance = [0.1,   0,   0,    0,    0,    0, \
-                                       0, 0.1,   0,    0,    0,    0, \
-                                       0,   0, 0.1,    0,    0,    0, \
-                                       0,   0,   0, 0.03,    0,    0, \
-                                       0,   0,   0,    0, 0.03,    0, \
-                                       0,   0,   0,    0,    0, 0.03]
+        odom_msg.twist.covariance = [0.5,   0,   0,    0,    0,    0, \
+                                       0, 0.5,   0,    0,    0,    0, \
+                                       0,   0, 0.5,    0,    0,    0, \
+                                       0,   0,   0, 1,    0,    0, \
+                                       0,   0,   0,    0, 1,    0, \
+                                       0,   0,   0,    0,    0, 1]
 
 
         odom_pub.publish(odom_msg)
@@ -148,6 +172,7 @@ def main():
     # Subscribe to the Teensy topics.
     rospy.Subscriber('/imu_raw', IMURaw, callbackImu)
     rospy.Subscriber('/odom_2d_raw', Odom2DRaw, callbackOdom)
+    rospy.Subscriber('/imu_calibration', BNO055CalibStatus, callbackImuCalib)
 
     rospy.spin()
 
